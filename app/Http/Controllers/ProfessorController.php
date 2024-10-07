@@ -6,6 +6,13 @@ use Illuminate\Http\Request;
 
 class ProfessorController extends Controller
 {
+    protected $colors;
+
+    public function __construct()
+    {
+        // Carregar as cores do arquivo colors.php
+        $this->colors = require app_path('Helpers/colors.php');
+    }
     /**
      * Display a listing of the resource.
      */
@@ -21,10 +28,15 @@ class ProfessorController extends Controller
     {
         $request->validate([
             'nome' => 'required|string|max:128',
-            'color' => 'required|string|max:16',
         ]);
-
-        return Professor::create($request->all());
+    
+        //cor única ao novo professor
+        $color = $this->getUniqueColor();
+    
+        return Professor::create([
+            'nome' => $request->nome,
+            'color' => $color,
+        ]);
     }
 
     /**
@@ -40,15 +52,15 @@ class ProfessorController extends Controller
      */
     public function update(Request $request, string $id)
     {
-        $request->validate([
-            'nome' => 'sometimes|string|max:128',
-            'color' => 'sometimes|string|max:16',
-        ]);
+        
+    $request->validate([
+        'nome' => 'sometimes|string|max:128',
+    ]);
 
-        $professor = Professor::findOrFail($id);
-        $professor->update($request->all());
+    $professor = Professor::findOrFail($id);
+    $professor->update($request->all());
 
-        return $professor;
+    return $professor;
     }
 
     /**
@@ -59,5 +71,19 @@ class ProfessorController extends Controller
         $professor = Professor::findOrFail($id);
         $professor->delete();
         return response()->noContent();
+    }
+
+    protected function getUniqueColor()
+    {
+
+        $usedColors = Professor::pluck('color')->toArray();
+
+        $availableColors = array_diff($this->colors, $usedColors);
+
+        if (empty($availableColors)) {
+            return null; 
+        }
+
+        return array_values($availableColors)[0];
     }
 }
