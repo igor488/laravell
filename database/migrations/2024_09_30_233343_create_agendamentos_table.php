@@ -13,9 +13,9 @@ return new class extends Migration
     {
         Schema::create('agendamentos', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('laboratorio_id'); // Foreign key para Laboratórios
-            $table->unsignedBigInteger('periodo_id'); // Foreign key para Periodos
-            $table->unsignedBigInteger('horario_id'); // Foreign key para Horarios
+            $table->unsignedBigInteger('laboratorio_id'); 
+            $table->unsignedBigInteger('periodo_id'); 
+            $table->unsignedBigInteger('horario_id'); 
             $table->json('aulas');
             $table->timestamps();
 
