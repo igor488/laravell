@@ -10,8 +10,11 @@ class ProfessorController extends Controller
 
     public function __construct()
     {
-        // Carregar as cores do arquivo colors.php
-        $this->colors = require app_path('Helpers/colors.php');
+        $colors = require app_path('Helpers/colors.php');
+        $this->colors = [
+            'primary' => $colors['primaryColors'](),
+            'secondary' => $colors['secondaryColors'](),
+        ];
     }
     /**
      * Display a listing of the resource.
@@ -75,15 +78,17 @@ class ProfessorController extends Controller
 
     protected function getUniqueColor()
     {
-
-        $usedColors = Professor::pluck('color')->toArray();
-
-        $availableColors = array_diff($this->colors, $usedColors);
-
-        if (empty($availableColors)) {
-            return null; 
+        foreach ($this->colors['primary'] as $color) {
+            if (!in_array($color, $usedColors)) {
+                return $color;
+            }
         }
-
-        return array_values($availableColors)[0];
+        foreach ($this->colors['secondary'] as $color) {
+            if (!in_array($color, $usedColors)) {
+                return $color;
+            }
+        }
+        return null;
+    
     }
 }
