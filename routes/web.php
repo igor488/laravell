@@ -17,7 +17,7 @@ Route::get('/professor/{id}', [ProfessorController::class, 'show']);
 Route::put('/professor/{id}', [ProfessorController::class, 'update']);
 Route::delete('/professor/{id}', [ProfessorController::class, 'destroy']);
 
-//rota
+
 Route::post('/agendamento/save', [AgendamentoController::class, 'store']);
 Route::get('/agendamento/list', [AgendamentoController::class, 'index']);
 Route::get('/agendamento/{id}', [AgendamentoController::class, 'show']);
