@@ -20,10 +20,13 @@ class AgendamentoController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'laboratorio_id' => 'required|exists:laboratorios,id',
-            'periodo_id' => 'required|exists:periodos,id',
-            'horario_id' => 'required|exists:horarios,id',
-            'aulas' => 'required|json',
+            'professor' => 'required|string|max:128',
+            'laboratorio' => 'required|string|max:64',
+            'data' => 'required|date_format:d/m/Y',
+            'periodo' => 'required|string|max:32',
+            'horario' => 'required|string|max:32',
+            'aulas' => 'required|array',
+            'aulas.' => 'string',
         ]);
 
         return Agendamento::create($request->all());
