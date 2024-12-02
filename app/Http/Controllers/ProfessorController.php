@@ -27,25 +27,33 @@ class ProfessorController extends Controller
     {
         $request->validate([
             'nome' => 'required|string|max:128',
-            'color' => 'required|string|max:16',
         ]);
-        return Professor::create($request->all());
-    
-        //cor única ao novo professor
+
         $color = $this->getUniqueColor();
-    
-        return Professor::create([
+
+        if (!$color) {
+            return response()->json(['message' => 'Todas as cores já foram usadas.'], 400);
+        }
+
+        $professor = Professor::create([
             'nome' => $request->nome,
             'color' => $color,
         ]);
+
+        return response()->json([
+            'message' => 'Professor criado com sucesso!',
+            'data' => $professor
+        ], 201);
     }
+
 
     /**
      * Display the specified resource.
      */
     public function show(string $id)
     {
-        return Professor::findOrFail($id);
+        $professor = Professor::findOrFail($id);
+        return response()->json($professor, 200);
     }
 
     /**

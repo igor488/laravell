@@ -3,14 +3,15 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use App\Models\Periodo;
 
 class PeriodoController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
-    public function index()
-    {
+    public function index() 
+    { 
         return Periodo::all(); 
     }
 
@@ -19,8 +20,16 @@ class PeriodoController extends Controller
      */
     public function store(Request $request)
     {
-        $request->validate(['nome' => 'required|string|max:32']);
-        return Periodo::create($request->all());
+        $request->validate([
+            'nome' => 'required|string|max:32',
+        ]);
+
+        $periodo = Periodo::create($request->all());
+
+        return response()->json([
+            'message' => 'Período criado com sucesso!',
+            'data' => $periodo
+        ], 201);
     }
 
     /**
@@ -28,7 +37,12 @@ class PeriodoController extends Controller
      */
     public function show(string $id)
     {
-        return Periodo::findOrFail($id);
+        try {
+            $periodo = Periodo::findOrFail($id);
+            return response()->json($periodo, 200);
+        } catch (\Exception $e) {
+            return response()->json(['message' => 'Período não encontrado.'], 404);
+        }
     }
 
     /**
@@ -36,11 +50,21 @@ class PeriodoController extends Controller
      */
     public function update(Request $request, string $id)
     {
-        $request->validate(['nome' => 'sometimes|string|max:32']);
-        $periodo = Periodo::findOrFail($id);
-        $periodo->update($request->all());
+        $request->validate([
+            'nome' => 'sometimes|string|max:32',
+        ]);
 
-        return $periodo;
+        try {
+            $periodo = Periodo::findOrFail($id);
+            $periodo->update($request->all());
+
+            return response()->json([
+                'message' => 'Período atualizado com sucesso!',
+                'data' => $periodo
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json(['message' => 'Erro ao atualizar período.'], 500);
+        }
     }
 
     /**
@@ -48,8 +72,27 @@ class PeriodoController extends Controller
      */
     public function destroy(string $id)
     {
-        $periodo = Periodo::findOrFail($id);
-        $periodo->delete();
-        return response()->noContent();
+        try {
+            $periodo = Periodo::findOrFail($id);
+            $periodo->delete();
+            return response()->json(['message' => 'Período excluído com sucesso!'], 200);
+        } catch (\Exception $e) {
+            return response()->json(['message' => 'Erro ao excluir período.'], 500);
+        }
+    }
+
+    /**
+     * Pesquisar períodos por nome.
+     */
+    public function searchByName(Request $request)
+    {
+        $request->validate(['nome' => 'required|string']);
+
+        $periodos = Periodo::where('nome', 'LIKE', '%' . $request->nome . '%')->get();
+
+        return response()->json([
+            'message' => 'Resultados da pesquisa:',
+            'data' => $periodos
+        ], 200);
     }
 }

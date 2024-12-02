@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use App\Models\Agendamento;
 
 class AgendamentoController extends Controller
 {
@@ -10,9 +11,9 @@ class AgendamentoController extends Controller
      * Display a listing of the resource.
      */
     public function index()
-    {
+     { 
         return Agendamento::all();
-    }
+     }
 
     /**
      * Store a newly created resource in storage.
@@ -26,10 +27,15 @@ class AgendamentoController extends Controller
             'periodo' => 'required|string|max:32',
             'horario' => 'required|string|max:32',
             'aulas' => 'required|array',
-            'aulas.' => 'string',
+            'aulas.*' => 'string', // Corrigido a regra de validação do array
         ]);
 
-        return Agendamento::create($request->all());
+        $agendamento = Agendamento::create($request->all());
+
+        return response()->json([
+            'message' => 'Agendamento criado com sucesso!',
+            'data' => $agendamento
+        ], 201);
     }
 
     /**
@@ -37,7 +43,12 @@ class AgendamentoController extends Controller
      */
     public function show(string $id)
     {
-        return Agendamento::findOrFail($id);
+        try {
+            $agendamento = Agendamento::findOrFail($id);
+            return response()->json($agendamento, 200);
+        } catch (\Exception $e) {
+            return response()->json(['message' => 'Agendamento não encontrado.'], 404);
+        }
     }
 
     /**
@@ -52,10 +63,17 @@ class AgendamentoController extends Controller
             'aulas' => 'sometimes|json',
         ]);
 
-        $agendamento = Agendamento::findOrFail($id);
-        $agendamento->update($request->all());
+        try {
+            $agendamento = Agendamento::findOrFail($id);
+            $agendamento->update($request->all());
 
-        return $agendamento;
+            return response()->json([
+                'message' => 'Agendamento atualizado com sucesso!',
+                'data' => $agendamento
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json(['message' => 'Erro ao atualizar agendamento.'], 500);
+        }
     }
 
     /**
@@ -63,8 +81,40 @@ class AgendamentoController extends Controller
      */
     public function destroy(string $id)
     {
-        $agendamento = Agendamento::findOrFail($id);
-        $agendamento->delete();
-        return response()->noContent();
+        try {
+            $agendamento = Agendamento::findOrFail($id);
+            $agendamento->delete();
+            return response()->json(['message' => 'Agendamento excluído com sucesso!'], 200);
+        } catch (\Exception $e) {
+            return response()->json(['message' => 'Erro ao excluir agendamento.'], 500);
+        }
+    }
+
+    /**
+     * Pesquisar agendamentos por professor ou laboratório.
+     */
+    public function search(Request $request)
+    {
+        $request->validate([
+            'professor' => 'nullable|string',
+            'laboratorio' => 'nullable|string',
+        ]);
+
+        $query = Agendamento::query();
+
+        if ($request->has('professor')) {
+            $query->where('professor', 'LIKE', '%' . $request->professor . '%');
+        }
+
+        if ($request->has('laboratorio')) {
+            $query->where('laboratorio', 'LIKE', '%' . $request->laboratorio . '%');
+        }
+
+        $agendamentos = $query->get();
+
+        return response()->json([
+            'message' => 'Resultados da pesquisa:',
+            'data' => $agendamentos
+        ], 200);
     }
 }

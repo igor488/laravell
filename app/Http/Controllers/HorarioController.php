@@ -3,16 +3,17 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use App\Models\Horario;
 
 class HorarioController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
-    public function index()
-    {
+    public function index() 
+    { 
         return Horario::all();
-    }
+     }
 
     /**
      * Store a newly created resource in storage.
@@ -25,7 +26,12 @@ class HorarioController extends Controller
             'aulas' => 'required|json',
         ]);
 
-        return Horario::create($request->all());
+        $horario = Horario::create($request->all());
+
+        return response()->json([
+            'message' => 'Horário criado com sucesso!',
+            'data' => $horario
+        ], 201);
     }
 
     /**
@@ -33,7 +39,12 @@ class HorarioController extends Controller
      */
     public function show(string $id)
     {
-        return Horario::findOrFail($id);
+        try {
+            $horario = Horario::findOrFail($id);
+            return response()->json($horario, 200);
+        } catch (\Exception $e) {
+            return response()->json(['message' => 'Horário não encontrado.'], 404);
+        }
     }
 
     /**
@@ -47,10 +58,17 @@ class HorarioController extends Controller
             'aulas' => 'sometimes|json',
         ]);
 
-        $horario = Horario::findOrFail($id);
-        $horario->update($request->all());
+        try {
+            $horario = Horario::findOrFail($id);
+            $horario->update($request->all());
 
-        return $horario;
+            return response()->json([
+                'message' => 'Horário atualizado com sucesso!',
+                'data' => $horario
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json(['message' => 'Erro ao atualizar horário.'], 500);
+        }
     }
 
     /**
@@ -58,8 +76,27 @@ class HorarioController extends Controller
      */
     public function destroy(string $id)
     {
-        $horario = Horario::findOrFail($id);
-        $horario->delete();
-        return response()->noContent();
+        try {
+            $horario = Horario::findOrFail($id);
+            $horario->delete();
+            return response()->json(['message' => 'Horário excluído com sucesso!'], 200);
+        } catch (\Exception $e) {
+            return response()->json(['message' => 'Erro ao excluir horário.'], 500);
+        }
+    }
+
+    /**
+     * Pesquisar horários por nome.
+     */
+    public function searchByName(Request $request)
+    {
+        $request->validate(['nome' => 'required|string']);
+
+        $horarios = Horario::where('nome', 'LIKE', '%' . $request->nome . '%')->get();
+
+        return response()->json([
+            'message' => 'Resultados da pesquisa:',
+            'data' => $horarios
+        ], 200);
     }
 }
